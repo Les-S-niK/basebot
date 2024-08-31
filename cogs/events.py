@@ -9,7 +9,7 @@ from disnake.ext.tasks import loop
 from disnake import AppCommandInteraction
 from disnake.ext.commands import Context
 from disnake.ext.commands.errors import CommandNotFound, MissingPermissions, \
-    UserInputError, NoPrivateMessage, NotOwner
+    UserInputError, NoPrivateMessage, NotOwner, CommandInvokeError
 from disnake.errors import InteractionResponded, InteractionTimedOut
 
 
@@ -17,7 +17,8 @@ from disnake.errors import InteractionResponded, InteractionTimedOut
 from config import COMMAND_PREFIX, BOT_NAME
 from bot_modules.bot_logger import on_ready_logger, cog_init_logger, error_logger
 from bot_modules.emoji import STOP_SIGN_EM
-
+from bot_modules.exceptions.balance_exceptions import ZeroBalanceError, \
+    NegativeBalanceError
 
 class Events(Cog):
     """Events cog for bot.
@@ -88,7 +89,7 @@ class Events(Cog):
 
 
     ## Calls on error in slash_command.
-    Cog.listener("on_slash_command_error")
+    @Cog.listener("on_slash_command_error")
     async def on_slash_command_error(
         self,
         inter: AppCommandInteraction,
@@ -122,6 +123,22 @@ class Events(Cog):
 """,
                 ephemeral=True
             )
+        elif isinstance(error, CommandInvokeError):
+            original_error: Exception = error.original
+            
+            if isinstance(original_error, NegativeBalanceError):
+                await inter.send(f"""
+{STOP_SIGN_EM} Уважаемый {author_mention}, `нельзя добавлять отрицательный баланс!`
+""",
+                    ephemeral=True
+                )
+            elif isinstance(original_error, ZeroBalanceError):
+                await inter.send(f"""
+{STOP_SIGN_EM} Уважаемый {author_mention}, `нельзя добавлять нулевой баланс!`
+ГЕНИАЛЬНО
+""",
+                    ephemeral=True
+                )
         else:
             await inter.send(
                 content=f"""

@@ -1,5 +1,6 @@
 
 ## Built-in modules:
+from decimal import Decimal
 from typing import Union
 ## Pip modules:
 from pymysql.cursors import DictCursor
@@ -47,11 +48,11 @@ class UserBalanceManager(object):
         """
         self.USER_ID: int = user_id
         self.USERNAME: str = username
-        self.MONEY_COUNT: float = money_count
-        self.old_balance: Union[float, bool]  = self._get_old_user_balance()
+        self.MONEY_COUNT: Decimal = Decimal(money_count)
+        self.old_balance: Union[float, None]  = self._get_old_user_balance()
 
 
-    def _get_old_user_balance(self) -> Union[float, bool]:
+    def _get_old_user_balance(self) -> Union[float, None]:
         """Get old user balance.
 
         Returns:
@@ -74,7 +75,7 @@ class UserBalanceManager(object):
     def manage_user_balance(
         self,
         add_money: bool
-    ) -> float:
+    ) -> Decimal:
         """Add or Sub money to old user balance.
 
         Args:
@@ -86,11 +87,11 @@ class UserBalanceManager(object):
 
         ## Do some operations with balance and MONEY_COUNT.
         if self.old_balance is not None:
-            old_balance: float = self.old_balance
+            old_balance: Decimal = Decimal(self.old_balance)
         else:
-            old_balance: float = 0.0
+            old_balance: Decimal = Decimal(0.0)
         
-        new_balance: float = old_balance + self.MONEY_COUNT if add_money \
+        new_balance: Decimal = old_balance + self.MONEY_COUNT if add_money \
             else old_balance - self.MONEY_COUNT
         ## If user not in db - add him, else - update his info.
         if self.old_balance is None:
